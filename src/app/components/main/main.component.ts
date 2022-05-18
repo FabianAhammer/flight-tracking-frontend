@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as Cesium from 'cesium';
+import { FlightService, TrackedFlight } from 'src/app/services/flight.service';
 import * as uuid from 'uuid';
 
 @Component({
@@ -11,9 +12,29 @@ export class MainComponent implements OnInit {
   public viewer: Cesium.Viewer = null;
   public provider = null;
 
+  private uri = 'assets/plane-models/a319.glb';
+
   public planes: Array<Cesium.Entity> = [];
 
-  constructor() {}
+  constructor(private flightService: FlightService) {
+    this.flightService.currentFlights.subscribe((e) => {
+      if (e.length > 0) {
+        this.addCollection(e.filter((e) => e.latitude && e.longitude));
+        // e.forEach((flight, i) => {
+        //   if (!flight.longitude || !flight.latitude || i > 10) {
+        //     return;
+        //   }
+        //   this.addPlane(
+        //     flight.longitude,
+        //     flight.latitude,
+        //     flight.altitude,
+        //     flight.track,
+        //     flight.flightNumber
+        //   );
+        // });
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.viewer = new Cesium.Viewer('map', {
@@ -22,6 +43,7 @@ export class MainComponent implements OnInit {
       },
       msaaSamples: 8,
       infoBox: false,
+      requestRenderMode: true,
       scene3DOnly: true,
       fullscreenButton: false,
       baseLayerPicker: false,
@@ -33,8 +55,6 @@ export class MainComponent implements OnInit {
       imageryProvider: this.osmProvider(),
       animation: true,
     });
-
-    this.addPlane();
   }
 
   /**
@@ -121,5 +141,35 @@ export class MainComponent implements OnInit {
       },
     });
     return [first, second];
+  }
+
+  private addCollection(flights: Array<TrackedFlight>) {
+    var instances = [];
+    flights.forEach((flight) => {
+      const position = Cesium.Cartesian3.fromDegrees(
+        flight.longitude,
+        flight.latitude,
+        flight.altitude
+      );
+      const scale = 100;
+      const modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(
+        position,
+        new Cesium.HeadingPitchRoll(flight.track, 0, 0)
+      );
+      Cesium.Matrix4.multiplyByUniformScale(modelMatrix, scale, modelMatrix);
+
+      instances.push({
+        modelMatrix: modelMatrix,
+        color: Cesium.Color.YELLOW,
+      });
+    });
+
+    return this.viewer.scene.primitives.add(
+      //@ts-ignore
+      new Cesium.ModelInstanceCollection({
+        url: this.uri,
+        instances: instances,
+      })
+    );
   }
 }

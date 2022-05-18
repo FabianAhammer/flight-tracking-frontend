@@ -2,8 +2,13 @@
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+const apiUrl = 'https://opensky-network.org/';
+const clients = {
+  flights: apiUrl + 'api/states/all',
+};
 export const environment = {
-  production: false
+  production: false,
+  clients: clients,
 };
 
 /*
