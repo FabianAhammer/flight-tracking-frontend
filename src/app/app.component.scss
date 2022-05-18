@@ -1,0 +1,18 @@
+.header {
+  height: 5rem;
+  font-size: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--surface-a);
+  border: 1px solid var(--surface-d);
+}
+
+.footer {
+  height: 5rem;
+}
+
+.content {
+  height: calc(100% - 10rem);
+  width: 100%;
+}
